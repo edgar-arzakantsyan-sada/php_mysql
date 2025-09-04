@@ -1,4 +1,3 @@
-Hello there\! Here's a professional and user-friendly README file for your project, formatted for GitHub. I've structured it with clear headings and added some technical details to make it more comprehensive.
 
 # Prometheus Node Exporter Setup Guide
 
