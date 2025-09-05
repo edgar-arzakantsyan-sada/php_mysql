@@ -439,26 +439,6 @@ openssl x509 -in /etc/nginx/ssl/nginx-selfsigned.crt -text -noout
 openssl x509 -in /etc/nginx/ssl/nginx-selfsigned.crt -noout -dates
 ```
 
-## 📋 Best Practices
-
-### Monitoring and Alerting
-
-- **Log Rotation:** Configure logrotate for service logs
-- **Disk Usage:** Monitor `/var/lib/prometheus/data` disk usage
-- **Service Health:** Implement health checks and alerting
-
-### Maintenance
-
-- **Regular Updates:** Keep Prometheus and Node Exporter updated
-- **Configuration Backup:** Backup configuration files
-- **Data Retention:** Configure appropriate data retention policies
-
-### Performance Optimization
-
-- **Scrape Intervals:** Adjust based on monitoring requirements
-- **Storage Configuration:** Optimize TSDB settings for workload
-- **Resource Allocation:** Monitor CPU and memory usage
-
 ## 📊 Metrics and Monitoring
 
 ### Key Node Exporter Metrics
