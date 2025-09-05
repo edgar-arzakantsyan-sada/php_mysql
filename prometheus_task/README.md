@@ -117,12 +117,6 @@ server {
 | `proxy_pass` | Backend service routing | Internal service access |
 | `add_header` | Security header injection | XSS, clickjacking protection |
 
-### Enable Configuration
-
-```bash
-# Create symbolic link
-ln -s /etc/nginx/sites-available/edgar.am /etc/nginx/sites-enabled/
-
 # Test configuration
 nginx -t
 
