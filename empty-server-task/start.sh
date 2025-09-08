@@ -165,7 +165,7 @@ scrape_configs:
 
     # metrics_path defaults to '/metrics'
     # scheme defaults to 'http'.
-    scheme: https
+    scheme: http
     tls_config:
       insecure_skip_verify: true 
     static_configs:
@@ -175,7 +175,7 @@ scrape_configs:
           app: "prometheus"
 
   - job_name: "node"
-    scheme: https
+    scheme: http
     tls_config:
       insecure_skip_verify: true
     static_configs:
