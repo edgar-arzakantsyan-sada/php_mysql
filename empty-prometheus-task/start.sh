@@ -117,7 +117,7 @@ nginx_config(){
         if [ ! -f /var/log/nginx/access.log ];then
                 sudo apt install nginx -y
                 echo "Please enter your domain"
-                read $REPLY
+                read REPLY
                 sudo mkdir -p /etc/nginx/ssl
                 echo "
                 [req]
