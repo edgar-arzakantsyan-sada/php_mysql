@@ -127,6 +127,8 @@ PORT3=$(sudo netstat -ltnp | grep grafana | awk '{print $4}' | awk -F':' '{print
 
 
 sed "s/PORT1/$PORT1/g; s/PORT2/$PORT2/g; s/PORT3/$PORT3/g;"  edgar.conf | sudo tee /etc/nginx/conf.d/edgar.conf &> /dev/null
+sudo mkdir -p /etc/nginx/ssl &>/dev/null
+sudo mv nginx* /etc/nginx/ssl
 sudo nginx -t && sudo nginx -s reload
 grep edgar.am /etc/hosts || echo "127.0.0.1 edgar.am" | sudo tee -a /etc/hosts &> /dev/null
 }
