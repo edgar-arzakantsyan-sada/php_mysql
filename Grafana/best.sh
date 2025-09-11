@@ -131,6 +131,8 @@ sudo systemctl enable $1.service
 }
 nginx_setup()
 {
+echo "Starting Nginx configuration......"
+sleep 5        
 PORT1=$(sudo netstat -ltnp | grep node_exporter | awk '{print $4}' | awk -F':' '{print $NF}' | head -n1)
 PORT2=$(sudo netstat -ltnp | grep prometheus | awk '{print $4}' | awk -F':' '{print $NF}' | head -n1)
 PORT3=$(sudo netstat -ltnp | grep grafana | awk '{print $4}' | awk -F':' '{print $NF}' | head -n1)
