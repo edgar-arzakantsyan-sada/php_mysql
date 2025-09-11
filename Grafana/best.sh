@@ -87,6 +87,7 @@ if [ "$1" = "prometheus" ];then
         sudo mv $1-*64/* /usr/local/bin/
         sudo mkdir -p /var/lib/$1/data
         sudo chown -R $1.$1 /var/lib/prometheus
+        sudo mv prometheus.yml /usr/local/bin/prometheus.yml 
         EXECSTART="/usr/local/bin/$1 --config.file=/usr/local/bin/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/data --web.listen-address=0.0.0.0:$2"
 elif [ "$1" = "grafana" ];then
         sudo mkdir -p /usr/local/grafana
@@ -124,7 +125,10 @@ PORT1=$(sudo netstat -ltnp | grep node_exporter | awk '{print $4}' | awk -F':' '
 PORT2=$(sudo netstat -ltnp | grep prometheus | awk '{print $4}' | awk -F':' '{print $NF}' | head -n1)
 PORT3=$(sudo netstat -ltnp | grep grafana | awk '{print $4}' | awk -F':' '{print $NF}' | head -n1)
 
-sed 
+
+sed "s/PORT1/$PORT1/g; s/PORT2/$PORT2/g; s/PORT3/$PORT3/g;"  edgar.conf | sudo tee /etc/nginx/conf.d/edgar.conf &> /dev/null
+sudo nginx -t && sudo nginx -s reload
+grep edgar.am /etc/hosts || echo "127.0.0.1 edgar.am" | sudo tee -a /etc/hosts &> /dev/null
 }
 
 
@@ -133,3 +137,4 @@ start_checks
 message node_exporter
 message prometheus
 message grafana
+nginx_setup
