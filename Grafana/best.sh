@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -e -x
 
 start_checks(){
     for i in wget openssl tee curl; do
