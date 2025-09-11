@@ -19,7 +19,7 @@ start_checks(){
 }
 
 message(){
-sudo systemctl status $1.service
+sudo systemctl status $1.service &>/dev/null
 if [ $? -eq 0 ];then
         echo "The service $1 is up and running, do we need a reconfiguration ? [y/n]"
         read RESPONSE
