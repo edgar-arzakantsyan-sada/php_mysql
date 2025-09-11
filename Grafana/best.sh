@@ -103,8 +103,9 @@ elif [ "$1" = "grafana" ];then
         sudo mv grafana-v*/* /usr/local/grafana
         sudo cp datasources.yml /usr/local/grafana/conf/provisioning/datasources/
         sudo chown -R grafana:users /usr/local/grafana
-        EXECSTART="/usr/local/grafana/bin/grafana server --config=/usr/local/grafana/conf/sample.ini  --homepath=/usr/local/grafana"
-        echo "http_port=$2" | sudo tee -a /usr/local/grafana/conf/sample.ini
+        EXECSTART="/usr/local/grafana/bin/grafana server --config=/usr/local/grafana/conf/default.ini  --homepath=/usr/local/grafana"
+        sudo sed "s/3000/$2/g;"  /usr/local/grafana/conf/default.ini
+
 else
         sudo mv $1-*64/* /usr/local/bin/
         EXECSTART="/usr/local/bin/$1 --web.listen-address=0.0.0.0:$2"
