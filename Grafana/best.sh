@@ -3,10 +3,19 @@
 set -e -x
 
 start_checks(){
-for i in wget openssl tee curl; do
-        which $i || sudo apt install $i || sudo apt update && sudo apt install $i &> /dev/null
-        done
-        which netstat || sudo apt install net-tools || sudo apt update && apt install net-tools &>/dev/null
+    for i in wget openssl tee curl; do
+        which "$i" >/dev/null &>/dev/null || { 
+            sudo apt install -y "$i" &>/dev/null || { 
+                sudo apt update -y &>/dev/null && sudo apt install -y "$i" >/dev/null &>/dev/null; 
+            }
+        }
+    done
+
+    which netstat >/dev/null &>/dev/null || {
+        sudo apt install -y net-tools >/dev/null &>/dev/null || {
+            sudo apt update -y >/dev/null &>/dev/null && sudo apt install -y net-tools >/dev/null &>/dev/null
+        }
+    }
 }
 
 message(){
