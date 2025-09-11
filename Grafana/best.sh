@@ -97,7 +97,8 @@ if [ "$1" = "prometheus" ];then
         sudo mkdir -p /var/lib/$1/data
         sudo chown -R $1.$1 /var/lib/prometheus
         sudo mv prometheus.yml /usr/local/bin/prometheus.yml 
-        EXECSTART="/usr/local/bin/$1 --config.file=/usr/local/bin/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/data --web.listen-address=0.0.0.0:$2"
+        EXECSTART="/usr/local/bin/$1 --config.file=/usr/local/bin/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/data --web.listen-address=0.0.0.0:$2 --web.external-url=https://edgar.am/prometheus --web.route-prefix=/prometheus"
+        
 elif [ "$1" = "grafana" ];then
         sudo mkdir -p /usr/local/grafana
         sudo mv grafana-v*/* /usr/local/grafana
