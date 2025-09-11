@@ -2,7 +2,8 @@
 
 
 start_checks(){
-    for i in wget openssl tee curl; do
+    echo "Checking and installing necessary commans if needed...."
+    for i in wget openssl tee curl nginx; do
         which "$i" >/dev/null &>/dev/null || { 
             sudo apt install -y "$i" &>/dev/null || { 
                 sudo apt update -y &>/dev/null && sudo apt install -y "$i" >/dev/null &>/dev/null; 
@@ -65,7 +66,7 @@ port() {
 
                 while true;
                 do
-                        read -p "Please enter the port number you want to run Node Exporter on (between 2000 or 65535)"
+                        read -p "Please enter the port number you want to run your sercie on (between 2000 or 65535)"
                         if ! [[ "$REPLY" =~ ^[0-9]+$ ]]; then
                                 echo "Error: Non-numeric prompt" >&2
                                 continue
