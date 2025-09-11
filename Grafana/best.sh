@@ -101,7 +101,7 @@ if [ "$1" = "prometheus" ];then
 elif [ "$1" = "grafana" ];then
         sudo mkdir -p /usr/local/grafana
         sudo mv grafana-v*/* /usr/local/grafana
-        sudo cp datasources.yml /usr/local/grafana/conf/provisioning/datasources/
+        sudo cp datasources.yaml /usr/local/grafana/conf/provisioning/datasources/
         sudo chown -R grafana:users /usr/local/grafana
         EXECSTART="/usr/local/grafana/bin/grafana server --config=/usr/local/grafana/conf/default.ini  --homepath=/usr/local/grafana"
         sudo sed "s/3000/$2/g;"  /usr/local/grafana/conf/default.ini
