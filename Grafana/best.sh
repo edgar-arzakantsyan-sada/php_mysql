@@ -99,7 +99,7 @@ if [ "$1" = "prometheus" ];then
         EXECSTART="/usr/local/bin/$1 --config.file=/usr/local/bin/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/data --web.listen-address=0.0.0.0:$2"
 elif [ "$1" = "grafana" ];then
         sudo mkdir -p /usr/local/grafana
-        sudo mv grafana-v*/ /usr/local/grafana
+        sudo mv grafana-v*/* /usr/local/grafana
         sudo cp datasources.yml /usr/local/grafana/conf/provisioning/datasources/
         sudo chown -R grafana:users /usr/local/grafana
         EXECSTART="/usr/local/grafana/bin/grafana server --config=/usr/local/grafana/conf/sample.ini  --config.override=/usr/local/grafana/conf/provisioning/datasources/datasources.yml --homepath=/usr/local/grafana --web.listen-address=0.0.0.0:$2"
