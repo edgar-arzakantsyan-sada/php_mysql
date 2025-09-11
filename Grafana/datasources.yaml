@@ -3,5 +3,5 @@ apiVersion: 1
 datasources:
     - name: Prometheus
       type: prometheus
-      url:  http://edgar.am/prometheus
+      url:  https://edgar.am/prometheus
       isDefault: true 
