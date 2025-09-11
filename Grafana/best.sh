@@ -93,21 +93,21 @@ conf(){
 
 echo "$1 is in under $2 port"
 if [ "$1" = "prometheus" ];then
-        sudo mv $1-*64/* /usr/local/bin/
+        sudo mv $1-*64/* /usr/local/bin/ &> /dev/null
         sudo mkdir -p /var/lib/$1/data
         sudo chown -R $1.$1 /var/lib/prometheus
-        sudo mv prometheus.yml /usr/local/bin/prometheus.yml 
+        sudo mv prometheus.yml /usr/local/bin/prometheus.yml &> /dev/null
         EXECSTART="/usr/local/bin/$1 --config.file=/usr/local/bin/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/data --web.listen-address=0.0.0.0:$2 --web.external-url=https://edgar.am/prometheus --web.route-prefix=/prometheus"
         
 elif [ "$1" = "grafana" ];then
-        sudo mkdir -p /usr/local/grafana
-        sudo mv grafana-v*/* /usr/local/grafana
+        sudo mkdir -p /usr/local/grafana &> /dev/null
+        sudo mv grafana-v*/* /usr/local/grafana &> /dev/null
         sudo cp datasources.yaml /usr/local/grafana/conf/provisioning/datasources/
         sudo chown -R grafana:users /usr/local/grafana
         EXECSTART="/usr/local/grafana/bin/grafana server --config=/usr/local/grafana/conf/defaults.ini  --homepath=/usr/local/grafana"
         sudo sed -i "s/3000/$2/g" /usr/local/grafana/conf/defaults.ini
 else
-        sudo mv $1-*64/* /usr/local/bin/
+        sudo mv $1-*64/* /usr/local/bin/ &> /dev/null
         EXECSTART="/usr/local/bin/$1 --web.listen-address=0.0.0.0:$2"
 fi
 echo " 
@@ -140,7 +140,7 @@ PORT3=$(sudo netstat -ltnp | grep grafana | awk '{print $4}' | awk -F':' '{print
 
 sed "s/PORT1/$PORT1/g; s/PORT2/$PORT2/g; s/PORT3/$PORT3/g;"  edgar.conf | sudo tee /etc/nginx/conf.d/edgar.conf &> /dev/null
 sudo mkdir -p /etc/nginx/ssl &>/dev/null
-sudo mv nginx* /etc/nginx/ssl
+sudo mv nginx* /etc/nginx/ssl &> /dev/null
 sudo cp /etc/nginx/ssl/nginx-selfsigned.crt /usr/local/share/ca-certificates/nginx-selfsigned.crt
 sudo update-ca-certificates
 sudo nginx -t && sudo nginx -s reload
@@ -154,3 +154,6 @@ message node_exporter
 message prometheus
 message grafana
 nginx_setup
+echo "Clening ..."
+rm -rf node_exporter-* grafana-* prometheus-* &>/dev/null
+echo "Done !"
