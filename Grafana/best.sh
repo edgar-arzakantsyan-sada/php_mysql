@@ -1,16 +1,26 @@
 #!/bin/bash
 
+# Grafana, Prometheus, and Node Exporter Setup Script
+# This script automates the installation and configuration of a complete monitoring stack
+# with secure HTTPS proxy integration using Nginx
+
+# Function: start_checks
+# Purpose: Verify and install necessary system commands and dependencies
+# Dependencies: wget, openssl, tee, curl, nginx, net-tools
 
 start_checks(){
-    echo "Checking and installing necessary commans if needed...."
+        echo "Checking and installing necessary commans if needed...."
+        # Check and install basic utilities required for the script
     for i in wget openssl tee curl nginx; do
         which "$i" >/dev/null &>/dev/null || { 
+            # Try to install the package, update repos if first attempt fails
             sudo apt install -y "$i" &>/dev/null || { 
                 sudo apt update -y &>/dev/null && sudo apt install -y "$i" >/dev/null &>/dev/null; 
             }
         }
     done
 
+    # Check and install net-tools separately (contains netstat command)
     which netstat >/dev/null &>/dev/null || {
         sudo apt install -y net-tools >/dev/null &>/dev/null || {
             sudo apt update -y >/dev/null &>/dev/null && sudo apt install -y net-tools >/dev/null &>/dev/null
@@ -18,16 +28,22 @@ start_checks(){
     }
 }
 
+# Function: message
+# Purpose: Check service status and interact with user for next actions
+# Parameter: $1 - service name (node_exporter, prometheus, grafana)
+# Returns: Calls appropriate functions based on service state and user choice
+
 message(){
 sudo systemctl status $1.service &>/dev/null
 if [ $? -eq 0 ];then
         echo "The service $1 is up and running, do we need a reconfiguration ? [y/n]"
         read RESPONSE
         if [ "$RESPONSE" = "y" ]; then
-                port $1
+                port $1 # Go to port configuration
         else
-                return 
+                return # Skip this service
         fi
+# Check if service files exist but service is not running        
 elif [ -f /etc/systemd/system/$1.service ];then
         echo "It looks like we have the files installed but the service isn't up and running: would you like to start/reconfigure/pass ? [s/r/p]"
         read RESPONSE
@@ -38,29 +54,45 @@ elif [ -f /etc/systemd/system/$1.service ];then
                 port $1
         else
                 echo "We can't work in these conditions, bye"
-                exit
+                exit # Exit if user chooses to pass
         fi
 else
+        # Service is not installed at all
         echo "We dont have the service $1 installed at all, would you like so ? [y/n]"
         read RESPONSE
         if [ "$RESPONSE" = "y" ];then
                 install $1
         else
                 echo "We can't work in these conditions, bye"
-                exit
+                exit # Exit if user chooses to pass
         fi
 fi
 }
+# Function: install
+# Purpose: Handle fresh installation of services including user creation and version selection
+# Parameter: $1 - service name
+# Dependencies: Requires version files (node_exporter, prometheus, grafana) with download URLs
+
 install(){
+# Create system user for the service if it doesn't exist
+# -r: system user, -s /bin/false: no shell access
 grep $1 /etc/passwd || sudo useradd -rs /bin/false $1 &>/dev/null
 echo "Welcome to the service $1 installation, please choose the installation option the default is 1"
 RESPONSE=1
+# Display numbered list of available versions from version file
 cat -n $1
 read RESPONSE
+# Download the selected version URL from the version file
+# If selection fails, fallback to first line (latest/default version)
 /usr/bin/wget $(cat $1 | head -$RESPONSE | tail -1) || /usr/bin/wget $(head -1 $1) 
 tar xvf $1*.gz
 port $1
 }
+
+# Function: port
+# Purpose: Interactive port selection with validation and availability checking
+# Parameter: $1 - service name (passed through to conf function)
+# Validates: Port range (2000-65535), numeric input, port availability
 
 port() {
 
@@ -89,9 +121,13 @@ port() {
 conf $1 $REPLY
 }
 
+# Function: conf
+# Purpose: Configure services with specific settings and create systemd service files
+# Parameters: $1 - service name, $2 - selected port
+# Creates: systemd service files, moves binaries, sets permissions
+
 conf(){
 
-echo "$1 is in under $2 port"
 if [ "$1" = "prometheus" ];then
         sudo mv $1-*64/* /usr/local/bin/ &> /dev/null
         sudo mkdir -p /var/lib/$1/data
@@ -129,6 +165,13 @@ sudo systemctl daemon-reload
 sudo systemctl restart $1.service
 sudo systemctl enable $1.service
 }
+
+
+# Function: nginx_setup
+# Purpose: Configure Nginx reverse proxy with SSL certificates and service routing
+# Detects: Running service ports automatically
+# Configures: SSL certificates, proxy rules, local DNS resolution
+
 nginx_setup()
 {
 echo "Starting Nginx configuration......"
@@ -142,7 +185,9 @@ sed "s/PORT1/$PORT1/g; s/PORT2/$PORT2/g; s/PORT3/$PORT3/g;"  edgar.conf | sudo t
 sudo mkdir -p /etc/nginx/ssl &>/dev/null
 sudo mv nginx* /etc/nginx/ssl &> /dev/null
 sudo cp /etc/nginx/ssl/nginx-selfsigned.crt /usr/local/share/ca-certificates/nginx-selfsigned.crt
+sleep 5
 sudo update-ca-certificates
+sudo systemctl restart grafana
 sudo nginx -t && sudo nginx -s reload
 grep edgar.am /etc/hosts || echo "127.0.0.1 edgar.am" | sudo tee -a /etc/hosts &> /dev/null
 }
