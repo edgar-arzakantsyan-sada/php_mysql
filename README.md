@@ -30,25 +30,21 @@ A comprehensive bash script for automated installation and configuration of Graf
 
 - **Operating System**: Ubuntu 24.04 LTS
 - **Internet Access**: Required for downloading service binaries
-- **Sudo Privileges**: Required for system configuration
 - **Domain**: Uses `edgar.am` domain (configured in /etc/hosts)
 
 ## 🛠️ Installation
 
 1. Clone this repository:
    ```bash
-   git clone <repository-url>
-   cd <repository-directory>
+   git clone https://github.com/edgar-arzakantsyan-sada/php_mysql.git
+   cd php_mysql
+   git checkout Ed
+   cd Grafana
    ```
 
-2. Make the script executable:
+2. Run the setup script:
    ```bash
-   chmod +x setup.sh
-   ```
-
-3. Run the setup script:
-   ```bash
-   sudo ./setup.sh
+    ./best.sh
    ```
 
 ## 📖 How It Works
@@ -132,7 +128,7 @@ After successful installation, access your services via:
 ## 🔄 Reconfiguration
 
 To reconfigure any service:
-1. Run the script again: `sudo ./setup.sh`
+1. Run the script again: `./best.sh`
 2. Choose reconfiguration when prompted
 3. Select new ports or versions as needed
 4. The script will handle service restart and proxy reconfiguration
@@ -144,13 +140,7 @@ To reconfigure any service:
 - **Grafana**: Visualization and dashboarding
 - **Nginx**: Reverse proxy with SSL termination
 
-## 🐛 Troubleshooting
 
-### Common Issues
-- **Port conflicts**: Script will detect and prompt for alternative ports
-- **Service startup failures**: Check systemd logs with `journalctl -u <service>`
-- **Certificate issues**: Certificates are regenerated on each run
-- **Permission errors**: Ensure script is run with sudo privileges
 
 ### Log Locations
 - **Systemd logs**: `journalctl -u <service_name>`
