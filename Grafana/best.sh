@@ -8,22 +8,24 @@
 # Purpose: Verify and install necessary system commands and dependencies
 # Dependencies: wget, openssl, tee, curl, nginx, net-tools
 
+set -e
+
 start_checks(){
         echo "Checking and installing necessary commans if needed...."
         # Check and install basic utilities required for the script
     for i in wget openssl tee curl nginx; do
-        which "$i" >/dev/null &>/dev/null || { 
+        which "$i" &>/dev/null || { 
             # Try to install the package, update repos if first attempt fails
             sudo apt install -y "$i" &>/dev/null || { 
-                sudo apt update -y &>/dev/null && sudo apt install -y "$i" >/dev/null &>/dev/null; 
+                sudo apt update -y &>/dev/null && sudo apt install -y "$i" &>/dev/null; 
             }
         }
     done
 
     # Check and install net-tools separately (contains netstat command)
-    which netstat >/dev/null &>/dev/null || {
-        sudo apt install -y net-tools >/dev/null &>/dev/null || {
-            sudo apt update -y >/dev/null &>/dev/null && sudo apt install -y net-tools >/dev/null &>/dev/null
+    which netstat &>/dev/null || {
+        sudo apt install -y net-tools &>/dev/null || {
+            sudo apt update -y &>/dev/null && sudo apt install -y net-tools &>/dev/null
         }
     }
 }
@@ -100,21 +102,21 @@ port() {
                 do
                         read -p "Please enter the port number you want to run your sercie on (between 2000 or 65535)"
                         if ! [[ "$REPLY" =~ ^[0-9]+$ ]]; then
-                                echo "Error: Non-numeric prompt" >&2
+                                echo "Error: Non-numeric prompt" 
                                 continue
                         fi
                         if [ $REPLY -lt 2000 ] || [ $REPLY -gt 65535 ]; then
-                                echo "Error: Please input a number in correct range " >&2
+                                echo "Error: Please input a number in correct range " 
                                 continue
                         else
-                                echo "Thank you! You entered $REPLY, checking the port availability..." >&2
+                                echo "Thank you! You entered $REPLY, checking the port availability..." 
                                 sudo netstat -tulpn | grep ":$REPLY" &> /dev/null
                                 if [ $? -ne 0 ]; then
-                                        echo "Congrats!!! The port $REPLY is available for this service" >&2
+                                        echo "Congrats!!! The port $REPLY is available for this service" 
                                         echo $REPLY
                                         break
                                 else
-                                        echo "The port is currently unavailable" >&2
+                                        echo "The port is currently unavailable"
                                 fi
                         fi
                 done
@@ -130,18 +132,18 @@ conf(){
 
 if [ "$1" = "prometheus" ];then
         sudo mv $1-*64/* /usr/local/bin/ &> /dev/null
-        sudo mkdir -p /var/lib/$1/data
-        sudo chown -R $1.$1 /var/lib/prometheus
+        sudo mkdir -p /var/lib/$1/data &>/dev/null
+        sudo chown -R $1.$1 /var/lib/prometheus &>/dev/null
         sudo mv prometheus.yml /usr/local/bin/prometheus.yml &> /dev/null
         EXECSTART="/usr/local/bin/$1 --config.file=/usr/local/bin/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/data --web.listen-address=0.0.0.0:$2 --web.external-url=https://edgar.am/prometheus --web.route-prefix=/prometheus"
         
 elif [ "$1" = "grafana" ];then
         sudo mkdir -p /usr/local/grafana &> /dev/null
         sudo mv grafana-v*/* /usr/local/grafana &> /dev/null
-        sudo cp datasources.yaml /usr/local/grafana/conf/provisioning/datasources/
-        sudo chown -R grafana:users /usr/local/grafana
+        sudo cp datasources.yaml /usr/local/grafana/conf/provisioning/datasources/ &>/dev/null
+        sudo chown -R grafana:users /usr/local/grafana &>/dev/null
         EXECSTART="/usr/local/grafana/bin/grafana server --config=/usr/local/grafana/conf/defaults.ini  --homepath=/usr/local/grafana"
-        sudo sed -i "s/3000/$2/g" /usr/local/grafana/conf/defaults.ini
+        sudo sed -i "s/3000/$2/g" /usr/local/grafana/conf/defaults.ini &>/dev/null
 else
         sudo mv $1-*64/* /usr/local/bin/ &> /dev/null
         EXECSTART="/usr/local/bin/$1 --web.listen-address=0.0.0.0:$2"
@@ -161,9 +163,9 @@ echo "
                 [Install]
                 WantedBy=multi-user.target
                 " | sudo tee /etc/systemd/system/$1.service &>/dev/null
-sudo systemctl daemon-reload
-sudo systemctl restart $1.service
-sudo systemctl enable $1.service
+sudo systemctl daemon-reload &>/dev/null
+sudo systemctl restart $1.service &>/dev/null
+sudo systemctl enable $1.service &>/dev/null
 }
 
 
@@ -184,10 +186,10 @@ PORT3=$(sudo netstat -ltnp | grep grafana | awk '{print $4}' | awk -F':' '{print
 sed "s/PORT1/$PORT1/g; s/PORT2/$PORT2/g; s/PORT3/$PORT3/g;"  edgar.conf | sudo tee /etc/nginx/conf.d/edgar.conf &> /dev/null
 sudo mkdir -p /etc/nginx/ssl &>/dev/null
 sudo mv nginx* /etc/nginx/ssl &> /dev/null
-sudo cp /etc/nginx/ssl/nginx-selfsigned.crt /usr/local/share/ca-certificates/nginx-selfsigned.crt
-sleep 5
-sudo update-ca-certificates
-sudo systemctl restart grafana
+sudo cp /etc/nginx/ssl/nginx-selfsigned.crt /usr/local/share/ca-certificates/nginx-selfsigned.crt &>/dev/null
+sleep 20
+sudo update-ca-certificates &>/dev/null
+sudo systemctl restart grafana &>/dev/null
 sudo nginx -t && sudo nginx -s reload
 grep edgar.am /etc/hosts || echo "127.0.0.1 edgar.am" | sudo tee -a /etc/hosts &> /dev/null
 }
