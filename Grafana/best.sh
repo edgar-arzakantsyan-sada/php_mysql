@@ -11,7 +11,7 @@
 set -e
 
 start_checks(){
-        echo "Checking and installing necessary commans if needed...."
+        echo "Checking and installing necessary commands if needed...."
         # Check and install basic utilities required for the script
     for i in wget openssl tee curl nginx; do
         which "$i" &>/dev/null || { 
@@ -36,14 +36,11 @@ start_checks(){
 # Returns: Calls appropriate functions based on service state and user choice
 
 message(){
-sudo systemctl status $1.service &>/dev/null
-if [ $? -eq 0 ];then
+if  sudo systemctl status $1.service &>/dev/null ;then
         echo "The service $1 is up and running, do we need a reconfiguration ? [y/n]"
         read RESPONSE
         if [ "$RESPONSE" = "y" ]; then
                 port $1 # Go to port configuration
-        else
-                return # Skip this service
         fi
 # Check if service files exist but service is not running        
 elif [ -f /etc/systemd/system/$1.service ];then
@@ -51,7 +48,6 @@ elif [ -f /etc/systemd/system/$1.service ];then
         read RESPONSE
         if [ "$RESPONSE" = "s" ];then
                 sudo systemctl start $1.service
-                return
         elif [ "$RESPONSE" = "r" ]; then
                 port $1
         else
@@ -97,58 +93,54 @@ port $1
 # Validates: Port range (2000-65535), numeric input, port availability
 
 port() {
-
-                while true;
-                do
-                        read -p "Please enter the port number you want to run your sercie on (between 2000 or 65535)"
-                        if ! [[ "$REPLY" =~ ^[0-9]+$ ]]; then
-                                echo "Error: Non-numeric prompt" 
-                                continue
-                        fi
-                        if [ $REPLY -lt 2000 ] || [ $REPLY -gt 65535 ]; then
-                                echo "Error: Please input a number in correct range " 
-                                continue
-                        else
-                                echo "Thank you! You entered $REPLY, checking the port availability..." 
-                                sudo netstat -tulpn | grep ":$REPLY" &> /dev/null
-                                if [ $? -ne 0 ]; then
-                                        echo "Congrats!!! The port $REPLY is available for this service" 
-                                        echo $REPLY
-                                        break
-                                else
-                                        echo "The port is currently unavailable"
-                                fi
-                        fi
-                done
-conf $1 $REPLY
+    while true; do
+        read -p "Please enter the port number you want to run your service on (between 2000 or 65535): "
+        if ! [[ "$REPLY" =~ ^[0-9]+$ ]]; then
+            echo "Error: Non-numeric prompt" 
+            continue
+        fi
+        if [ "$REPLY" -lt 2000 ] || [ "$REPLY" -gt 65535 ]; then
+            echo "Error: Please input a number in correct range " 
+            continue
+        else
+            echo "Thank you! You entered $REPLY, checking the port availability..." 
+            if sudo netstat -tulpn | grep ":$REPLY" &> /dev/null; then
+                echo "The port is currently unavailable"
+            else
+                echo "Congrats!!! The port $REPLY is available for this service" 
+                echo "$REPLY"
+                break
+            fi
+        fi
+    done
+    conf $1 $REPLY
 }
-
 # Function: conf
 # Purpose: Configure services with specific settings and create systemd service files
 # Parameters: $1 - service name, $2 - selected port
 # Creates: systemd service files, moves binaries, sets permissions
 
 conf(){
-
-if [ "$1" = "prometheus" ];then
-        sudo mv $1-*64/* /usr/local/bin/ &> /dev/null
-        sudo mkdir -p /var/lib/$1/data &>/dev/null
-        sudo chown -R $1.$1 /var/lib/prometheus &>/dev/null
-        sudo mv prometheus.yml /usr/local/bin/prometheus.yml &> /dev/null
+    if [ "$1" = "prometheus" ]; then
+        sudo mv $1-*64/* /usr/local/bin/ &> /dev/null || true
+        sudo mkdir -p /var/lib/$1/data &>/dev/null || true
+        sudo chown -R $1.$1 /var/lib/prometheus &>/dev/null || true
+        sudo mv prometheus.yml /usr/local/bin/prometheus.yml &> /dev/null || true
         EXECSTART="/usr/local/bin/$1 --config.file=/usr/local/bin/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/data --web.listen-address=0.0.0.0:$2 --web.external-url=https://edgar.am/prometheus --web.route-prefix=/prometheus"
         
-elif [ "$1" = "grafana" ];then
-        sudo mkdir -p /usr/local/grafana &> /dev/null
-        sudo mv grafana-v*/* /usr/local/grafana &> /dev/null
-        sudo cp datasources.yaml /usr/local/grafana/conf/provisioning/datasources/ &>/dev/null
-        sudo chown -R grafana:users /usr/local/grafana &>/dev/null
+    elif [ "$1" = "grafana" ]; then
+        sudo mkdir -p /usr/local/grafana &> /dev/null || true
+        sudo mv grafana-v*/* /usr/local/grafana &> /dev/null || true
+        sudo cp datasources.yaml /usr/local/grafana/conf/provisioning/datasources/ &>/dev/null || true
+        sudo chown -R grafana:users /usr/local/grafana &>/dev/null || true
         EXECSTART="/usr/local/grafana/bin/grafana server --config=/usr/local/grafana/conf/defaults.ini  --homepath=/usr/local/grafana"
-        sudo sed -i "s/3000/$2/g" /usr/local/grafana/conf/defaults.ini &>/dev/null
-else
-        sudo mv $1-*64/* /usr/local/bin/ &> /dev/null
+        sudo sed -i "s/3000/$2/g" /usr/local/grafana/conf/defaults.ini &>/dev/null || true
+    else
+        sudo mv $1-*64/* /usr/local/bin/ &> /dev/null || true
         EXECSTART="/usr/local/bin/$1 --web.listen-address=0.0.0.0:$2"
-fi
-echo " 
+    fi
+
+    echo " 
                 [Unit]
                 Description=$1
                 After=network.target
@@ -156,18 +148,17 @@ echo "
                 [Service]
                 User=$1
                 Group=$1
-                Type=simpe
+                Type=simple
                 ExecStart=$EXECSTART
-
 
                 [Install]
                 WantedBy=multi-user.target
-                " | sudo tee /etc/systemd/system/$1.service &>/dev/null
-sudo systemctl daemon-reload &>/dev/null
-sudo systemctl restart $1.service &>/dev/null
-sudo systemctl enable $1.service &>/dev/null
-}
+                " | sudo tee /etc/systemd/system/$1.service &>/dev/null || true
 
+    sudo systemctl daemon-reload &>/dev/null || true
+    sudo systemctl restart $1.service &>/dev/null || true
+    sudo systemctl enable $1.service &>/dev/null || true
+}
 
 # Function: nginx_setup
 # Purpose: Configure Nginx reverse proxy with SSL certificates and service routing
@@ -190,6 +181,7 @@ sudo cp /etc/nginx/ssl/nginx-selfsigned.crt /usr/local/share/ca-certificates/ngi
 sleep 20
 sudo update-ca-certificates &>/dev/null
 sudo systemctl restart grafana &>/dev/null
+sleep 15
 sudo nginx -t && sudo nginx -s reload
 grep edgar.am /etc/hosts || echo "127.0.0.1 edgar.am" | sudo tee -a /etc/hosts &> /dev/null
 }
