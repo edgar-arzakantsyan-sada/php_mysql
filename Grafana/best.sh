@@ -90,16 +90,16 @@ port $1
 # Function: port
 # Purpose: Interactive port selection with validation and availability checking
 # Parameter: $1 - service name (passed through to conf function)
-# Validates: Port range (2000-65535), numeric input, port availability
+# Validates: Port range (1025-65535), numeric input, port availability
 
 port() {
     while true; do
-        read -p "Please enter the port number you want to run your service on (between 2000 or 65535): "
+        read -p "Please enter the port number you want to run your service on (between 1025 or 65535): "
         if ! [[ "$REPLY" =~ ^[0-9]+$ ]]; then
             echo "Error: Non-numeric prompt" 
             continue
         fi
-        if [ "$REPLY" -lt 2000 ] || [ "$REPLY" -gt 65535 ]; then
+        if [ "$REPLY" -lt 1025 ] || [ "$REPLY" -gt 65535 ]; then
             echo "Error: Please input a number in correct range " 
             continue
         else

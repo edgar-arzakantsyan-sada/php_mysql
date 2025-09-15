@@ -2,37 +2,47 @@
 
 A comprehensive bash script for automated installation and configuration of Grafana, Prometheus, and Node Exporter with secure HTTPS proxy integration on Ubuntu 24.04 LTS.
 
-## 🚀 Features
+## Features
+
+### Intelligent Service Management
+- Automatic service status detection with contextual prompts
+- Smart handling of installed but stopped services
+- Reconfiguration support for running services
+- Graceful exit options for user control
 
 ### Port Flexibility
 - Configure all services on any available port you want
-- Automatic port availability checking
+- Automatic port availability checking with netstat validation
 - Port range validation (2000-65535)
+- Real-time port conflict detection
 
-### Reconfiguration Support
-- Rerun the script to reconfigure any service
-- Configure all services if needed
-- Service status detection and smart handling
-
-### Multiple Versions Available
+### Version Selection System
 - Choose between multiple versions of services during installation
-- Default version selection for quick setup
-- Fallback to latest stable version
+- Numbered selection interface with default option (1)
+- Automatic fallback to latest stable version on selection failure
+- Service-specific version files support
 
-### Secure HTTPS Connection with Flexible Proxy Server
-- **Nginx Proxy Service** on top of the infrastructure
+### Secure HTTPS Connection with Automatic Proxy Setup
+- **Nginx Proxy Service** with automatic port detection
 - No need to open individual ports - everything works internally
-- **Automatic redirection** to HTTPS connection
-- **Trusted TLS Certificates** with self-signed certificate generation
-- Domain-based routing with local DNS resolution
+- **Automatic HTTP to HTTPS redirection**
+- **Self-signed TLS Certificate generation and system integration**
+- Domain-based routing with automatic local DNS resolution
+- SSL certificate trust store integration
 
-## 📋 Requirements
+### Enterprise Service Architecture
+- **Prometheus**: Advanced configuration with external URL routing and web route prefix
+- **Grafana**: Datasource provisioning with custom configuration management
+- **Node Exporter**: System metrics collection with flexible binding options
+
+## Requirements
 
 - **Operating System**: Ubuntu 24.04 LTS
+- **Privileges**: sudo access required
 - **Internet Access**: Required for downloading service binaries
-- **Domain**: Uses `edgar.am` domain (configured in /etc/hosts)
+- **Domain Configuration**: Uses `edgar.am` domain (automatically configured in /etc/hosts)
 
-## 🛠️ Installation
+## Installation
 
 1. Clone this repository:
    ```bash
@@ -44,128 +54,284 @@ A comprehensive bash script for automated installation and configuration of Graf
 
 2. Run the setup script:
    ```bash
-    ./best.sh
+   ./best.sh
    ```
 
-## 📖 How It Works
+## How It Works
 
-### Step-by-Step Process
+### Phase 1: System Preparation
 
-#### 1. Initial System Checks
-The script first validates and installs necessary system commands and services:
-- `wget` - for downloading service binaries
-- `openssl` - for SSL certificate generation
-- `curl` - for HTTP requests
-- `nginx` - for reverse proxy
-- `net-tools` - for network diagnostics
+#### Dependency Management (`start_checks`)
+The script validates and installs essential system components:
+- **wget**: Service binary downloads
+- **openssl**: SSL certificate generation
+- **tee**: Configuration file creation
+- **curl**: HTTP connectivity testing
+- **nginx**: Reverse proxy server
+- **net-tools**: Network diagnostics (netstat command)
 
-#### 2. Service Status Detection
-For each service (node_exporter, prometheus, grafana), the script:
-- **Running Service**: Asks if reconfiguration is needed
-- **Installed but Stopped**: Options to start, reconfigure, or skip
-- **Not Installed**: Prompts for fresh installation
+Error handling includes automatic repository updates on package installation failures.
 
-#### 3. Version Selection and Installation
-- Creates dedicated system users for each service
-- Presents available versions for selection (default is option 1)
-- Downloads and extracts service binaries
-- Configures service-specific settings
+### Phase 2: Service Status Intelligence
 
-#### 4. Port Configuration
-- Interactive port selection with validation
-- Ensures ports are in valid range (2000-65535)
-- Checks port availability using `netstat`
-- Prevents port conflicts
+#### Smart Service Detection (`message`)
+For each service (node_exporter, prometheus, grafana), the script performs contextual analysis:
 
-#### 5. Service Configuration
-Each service gets configured with:
-- **Prometheus**: TSDB storage, web interface, external URL routing
-- **Grafana**: Custom configuration, datasource provisioning
-- **Node Exporter**: Basic metrics collection setup
+**Running Service Detection**:
+```bash
+sudo systemctl status $service.service
+```
+- **Status**: Active/Running
+- **Action**: Prompts for reconfiguration option
+- **Flow**: Proceeds to port configuration if confirmed
 
-#### 6. Systemd Integration
-- Creates systemd service files for each component
-- Enables auto-start on system boot
-- Provides service management capabilities
+**Installed but Stopped Service**:
+```bash
+[ -f /etc/systemd/system/$service.service ]
+```
+- **Status**: Service files exist, service inactive
+- **Options**: Start/Reconfigure/Pass [s/r/p]
+- **Flexibility**: Multiple resolution paths
 
-#### 7. Nginx Proxy Setup
-- Detects running service ports automatically
-- Generates SSL certificates
-- Configures reverse proxy with HTTPS redirection
-- Updates system certificate store
-- Configures local DNS resolution
+**Fresh Installation Required**:
+- **Status**: No service files detected
+- **Action**: Installation workflow initiation
+- **User Control**: Installation confirmation required
 
-## 🔧 Configuration Files
+### Phase 3: Installation and Version Management
 
-### Required Files
-- `prometheus.yml` - Prometheus configuration
-- `datasources.yaml` - Grafana datasource configuration
-- `edgar.conf` - Nginx proxy configuration template
-- Service version lists: `node_exporter`, `prometheus`, `grafana`
+#### User Creation and Version Selection (`install`)
+```bash
+# System user creation with security isolation
+grep $service /etc/passwd || sudo useradd -rs /bin/false $service
 
-### Generated Files
-- `/etc/systemd/system/<service>.service` - Systemd service definitions
-- `/etc/nginx/conf.d/edgar.conf` - Nginx proxy configuration
-- `/etc/nginx/ssl/nginx*` - SSL certificates
-- `/etc/hosts` - Local DNS entry for edgar.am
+# Interactive version selection with fallback mechanism
+cat -n $service  # Display numbered version list
+/usr/bin/wget $(cat $service | head -$RESPONSE | tail -1) || /usr/bin/wget $(head -1 $service)
+```
 
-## 🌐 Access Points
+**Security Implementation**:
+- `-r`: System account (UID < 1000)
+- `-s /bin/false`: No shell access
+- Service isolation principle
 
-After successful installation, access your services via:
+### Phase 4: Port Configuration and Validation
 
-- **Grafana Dashboard**: `https://edgar.am/`
-- **Prometheus Web UI**: `https://edgar.am/prometheus`
-- **Node Exporter Metrics**: `https://edgar.am/node_exporter`
+#### Interactive Port Management (`port`)
+```bash
+while true; do
+    read -p "Please enter the port number (2000-65535): "
+    # Numeric validation
+    [[ "$REPLY" =~ ^[0-9]+$ ]] || continue
+    
+    # Range validation
+    [ "$REPLY" -ge 2000 ] && [ "$REPLY" -le 65535 ] || continue
+    
+    # Availability check
+    sudo netstat -tulpn | grep ":$REPLY" || break
+done
+```
 
-## 🔒 Security Features
+**Validation Layers**:
+1. **Input Type**: Numeric-only validation
+2. **Range Check**: Port range 2000-65535
+3. **Availability**: Real-time port conflict detection
+4. **Confirmation**: User feedback on port availability
 
-- **HTTPS Only**: Automatic HTTP to HTTPS redirection
-- **Self-Signed Certificates**: Trusted by system certificate store
-- **Service Isolation**: Dedicated system users for each service
-- **Internal Communication**: Services communicate internally, only Nginx exposed
-- **Port Security**: No direct external port exposure
+### Phase 5: Service-Specific Configuration
 
-## 🔄 Reconfiguration
+#### Advanced Service Configuration (`conf`)
 
-To reconfigure any service:
-1. Run the script again: `./best.sh`
-2. Choose reconfiguration when prompted
-3. Select new ports or versions as needed
-4. The script will handle service restart and proxy reconfiguration
+**Prometheus Configuration**:
+```bash
+EXECSTART="/usr/local/bin/prometheus \
+    --config.file=/usr/local/bin/prometheus.yml \
+    --storage.tsdb.path=/var/lib/prometheus/data \
+    --web.listen-address=0.0.0.0:$PORT \
+    --web.external-url=https://edgar.am/prometheus \
+    --web.route-prefix=/prometheus"
+```
 
-## 📊 Monitoring Stack
+**Grafana Configuration**:
+```bash
+EXECSTART="/usr/local/grafana/bin/grafana server \
+    --config=/usr/local/grafana/conf/defaults.ini \
+    --homepath=/usr/local/grafana"
 
-- **Node Exporter**: System and hardware metrics collection
-- **Prometheus**: Metrics storage and querying
-- **Grafana**: Visualization and dashboarding
-- **Nginx**: Reverse proxy with SSL termination
+# Dynamic port configuration in defaults.ini
+sudo sed -i "s/3000/$PORT/g" /usr/local/grafana/conf/defaults.ini
+```
 
+**Node Exporter Configuration**:
+```bash
+EXECSTART="/usr/local/bin/node_exporter --web.listen-address=0.0.0.0:$PORT"
+```
 
+#### SystemD Integration
+```ini
+[Unit]
+Description=$service
+After=network.target
 
-### Log Locations
-- **Systemd logs**: `journalctl -u <service_name>`
-- **Nginx logs**: `/var/log/nginx/error.log` and `/var/log/nginx/access.log`
-- **Service logs**: Check individual service documentation
+[Service]
+User=$service
+Group=$service
+Type=simple
+ExecStart=$EXECSTART
 
-## 📝 License
+[Install]
+WantedBy=multi-user.target
+```
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+### Phase 6: Nginx Proxy Automation
 
-## 🤝 Contributing
+#### Intelligent Proxy Configuration (`nginx_setup`)
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+**Automatic Port Detection**:
+```bash
+PORT1=$(sudo netstat -ltnp | grep node_exporter | awk '{print $4}' | awk -F':' '{print $NF}' | head -n1)
+PORT2=$(sudo netstat -ltnp | grep prometheus | awk '{print $4}' | awk -F':' '{print $NF}' | head -n1)  
+PORT3=$(sudo netstat -ltnp | grep grafana | awk '{print $4}' | awk -F':' '{print $NF}' | head -n1)
+```
 
-## 📞 Support
+**Dynamic Configuration Generation**:
+```bash
+sed "s/PORT1/$PORT1/g; s/PORT2/$PORT2/g; s/PORT3/$PORT3/g;" edgar.conf | sudo tee /etc/nginx/conf.d/edgar.conf
+```
 
-For issues and questions:
-- Create an issue in the GitHub repository
-- Check existing documentation
-- Review systemd logs for service-specific problems
+**SSL Certificate Integration**:
+```bash
+# SSL certificate deployment
+sudo mkdir -p /etc/nginx/ssl
+sudo mv nginx* /etc/nginx/ssl
 
----
+# System certificate store integration
+sudo cp /etc/nginx/ssl/nginx-selfsigned.crt /usr/local/share/ca-certificates/
+sudo update-ca-certificates
 
-**Note**: This script is designed for development and testing environments. For production use, consider implementing additional security measures and proper certificate management.
+# Local DNS resolution
+echo "127.0.0.1 edgar.am" | sudo tee -a /etc/hosts
+```
+
+## Configuration Files
+
+### Required Configuration Files
+- **`prometheus.yml`**: Prometheus scrape configuration and global settings
+- **`datasources.yaml`**: Grafana datasource provisioning configuration
+- **`edgar.conf`**: Nginx reverse proxy template with PORT placeholders
+- **Version Files**: `node_exporter`, `prometheus`, `grafana` (containing download URLs)
+
+### Auto-Generated Files
+- **`/etc/systemd/system/<service>.service`**: SystemD service definitions
+- **`/etc/nginx/conf.d/edgar.conf`**: Dynamic Nginx configuration
+- **`/etc/nginx/ssl/nginx*`**: SSL certificates and keys
+- **`/etc/hosts`**: Local DNS entry for edgar.am domain
+
+## Access Points
+
+After successful installation, access your complete monitoring stack:
+
+- **Grafana Dashboard**: `https://edgar.am/` (Primary visualization interface)
+- **Prometheus Web UI**: `https://edgar.am/prometheus` (Metrics exploration and querying)
+- **Node Exporter Metrics**: `https://edgar.am/node_exporter` (Raw system metrics endpoint)
+
+## Security Architecture
+
+### Multi-Layer Security Implementation
+- **HTTPS Enforcement**: Automatic HTTP to HTTPS redirection
+- **Certificate Management**: Self-signed certificates integrated into system trust store
+- **Service Isolation**: Dedicated system users with no shell access
+- **Internal Communication**: Services communicate via localhost, only Nginx exposed externally
+- **Port Security**: No direct external access to service ports
+
+### Network Security Design
+```
+External Request (HTTPS) → Nginx (443) → Internal Services (Custom Ports)
+                                    ↓
+                            [Prometheus:PORT2]
+                            [Grafana:PORT3]
+                            [Node Exporter:PORT1]
+```
+
+## Reconfiguration Workflow
+
+### Service Reconfiguration Process
+1. **Execute Script**: `./best.sh`
+2. **Service Detection**: Script detects existing services automatically
+3. **Reconfiguration Prompt**: Choose reconfiguration when prompted for running services
+4. **Port Selection**: Select new ports with availability validation
+5. **Automatic Updates**: Script handles service restart and proxy reconfiguration
+6. **Validation**: Nginx configuration test and reload
+
+### Reconfiguration Scenarios
+- **Port Changes**: Update service ports without reinstallation
+- **Version Updates**: Upgrade to newer service versions
+- **Configuration Modifications**: Update service-specific settings
+- **SSL Certificate Renewal**: Update certificates and reload services
+
+## Monitoring Stack Architecture
+
+### Component Overview
+| Component | Purpose | Configuration |
+|-----------|---------|---------------|
+| **Node Exporter** | System and hardware metrics collection | Custom port binding, comprehensive system metrics |
+| **Prometheus** | Metrics storage, querying, and alerting | TSDB storage, external URL routing, web prefix configuration |
+| **Grafana** | Data visualization and dashboarding | Datasource provisioning, custom configuration management |
+| **Nginx** | Reverse proxy with SSL termination | Dynamic port detection, HTTPS enforcement, certificate management |
+
+### Data Flow Architecture
+```
+System Metrics → Node Exporter → Prometheus → Grafana Dashboard
+                                      ↑              ↓
+                               Storage & Query    Visualization
+                                      ↑              ↓
+                                 Nginx Proxy ← HTTPS Clients
+```
+
+## Troubleshooting
+
+### Common Issues and Diagnostics
+
+#### Service Status Verification
+```bash
+# Check all service status
+sudo systemctl status node_exporter prometheus grafana nginx
+
+# Check service logs
+sudo journalctl -u <service_name> -f
+
+# Verify port bindings
+sudo netstat -tulpn | grep -E "(node_exporter|prometheus|grafana)"
+```
+
+#### Network Connectivity Testing
+```bash
+# Test internal connectivity
+curl http://localhost:<port>/metrics        # Node Exporter
+curl http://localhost:<port>/api/v1/status  # Prometheus
+curl http://localhost:<port>/api/health     # Grafana
+
+# Test external HTTPS access
+curl -k https://edgar.am/
+curl -k https://edgar.am/prometheus
+curl -k https://edgar.am/node_exporter
+```
+
+#### SSL Certificate Validation
+```bash
+# Check certificate details
+openssl x509 -in /etc/nginx/ssl/nginx-selfsigned.crt -text -noout
+
+# Verify certificate in trust store
+ls -la /usr/local/share/ca-certificates/nginx-selfsigned.crt
+
+# Test Nginx configuration
+sudo nginx -t
+```
+
+### Log Analysis Locations
+- **SystemD Service Logs**: `journalctl -u <service_name>`
+- **Nginx Access Logs**: `/var/log/nginx/access.log`
+- **Nginx Error Logs**: `/var/log/nginx/error.log`
+- **Service-Specific Logs**: Check individual service documentation for additional log locations
+
