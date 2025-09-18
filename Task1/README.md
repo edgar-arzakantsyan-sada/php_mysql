@@ -147,7 +147,7 @@ After completing the installation:
 
 2. **Access WordPress:**
    - Open your web browser
-   - Navigate to `http://localhost`
+   - Navigate to `http://[PUBLIC_IP]`
    - Complete the WordPress setup wizard
 
 3. **WordPress Database Configuration:**
@@ -168,27 +168,6 @@ After completing the installation:
 - **MySQL Root Password**: `EdJan` (⚠️ Change in production)
 - **WordPress Database**: `wordpress`
 
-## 🔧 Troubleshooting
-
-### Common Issues
-
-1. **Port 80 already in use:**
-   ```bash
-   docker run --name wordpress-instance --network my-network -p 8080:80 -d wordpress:latest
-   ```
-   Then access via `http://localhost:8080`
-
-2. **Check container logs:**
-   ```bash
-   docker logs mysql-instance
-   docker logs wordpress-instance
-   ```
-
-3. **Restart containers:**
-   ```bash
-   docker restart mysql-instance wordpress-instance
-   ```
-
 ### Container Management Commands
 
 ```bash
@@ -204,23 +183,3 @@ docker rm wordpress-instance mysql-instance
 # Remove network
 docker network rm my-network
 ```
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
-
-## 📝 Notes
-
-- **Security**: This setup uses default passwords suitable for development only
-- **Data Persistence**: Consider using Docker volumes for production deployments
-- **SSL/HTTPS**: Additional configuration required for secure connections
-- **Backup**: Regular database backups recommended for production use
-
----
-
-**Happy Dockerizing!** 🐳
-
-For more information, visit the official documentation:
-- [Docker Documentation](https://docs.docker.com/)
-- [WordPress Docker Image](https://hub.docker.com/_/wordpress)
-- [MySQL Docker Image](https://hub.docker.com/_/mysql)
