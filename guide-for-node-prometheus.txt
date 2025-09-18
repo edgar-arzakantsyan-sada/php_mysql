@@ -1,0 +1,20 @@
+This is step by step introduction of how to create Docker containers for Node Exporter and Prometheus with Dockerfiles
+
+
+First of all it is recommended to have separate directories for each service where we can keep Dockerfiles and necessary config files
+
+
+Then we need to create a docker network, and newly created containers should belong to that network.
+
+docker network create prometheus-node
+
+then we need to create Dockerfiles, the content is pushed you can see them.
+
+Then building images with their respective Dockerfiles and containers.
+
+For This task it is important to create the Node Exporter Container with name "node_exporter_instance", so the prometheus could recognize it by name 
+
+And that's it we can reach to our services by browsing [PUBLIC_IP:PORT]
+
+
+
