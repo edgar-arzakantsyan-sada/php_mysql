@@ -2,21 +2,6 @@
 
 A comprehensive guide for setting up a WordPress development environment using Docker containers with MySQL database backend.
 
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Prerequisites](#prerequisites)
-- [Installation Steps](#installation-steps)
-  - [1. Docker Installation](#1-docker-installation)
-  - [2. Network Configuration](#2-network-configuration)
-  - [3. MySQL Container Setup](#3-mysql-container-setup)
-  - [4. Database Configuration](#4-database-configuration)
-  - [5. WordPress Container Deployment](#5-wordpress-container-deployment)
-- [Verification](#verification)
-- [Configuration Details](#configuration-details)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-
 ## 🌟 Overview
 
 This repository provides step-by-step instructions for deploying a WordPress application using Docker containers. The setup includes:
@@ -82,7 +67,7 @@ docker network create my-network
 **Why create a custom network?**
 - Containers can communicate using container names instead of IP addresses
 - Provides network isolation from other Docker containers
-- Enables automatic DNS resolution between containers
+- Enables automatic ???DNS??? resolution between containers
 
 ### 3. MySQL Container Setup
 
