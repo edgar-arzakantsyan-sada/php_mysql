@@ -73,6 +73,13 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 docker network create my-network
 ```
 
+## Docker Volume Configuration
+
+### Create Custom Volume
+```bash
+docker volume create my-vol
+```
+
 **Purpose**: Creates an isolated network for secure inter-container communication without exposing internal ports to the host system.
 
 ## Service Deployment
