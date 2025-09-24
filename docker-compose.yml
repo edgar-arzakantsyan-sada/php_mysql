@@ -1,6 +1,7 @@
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
+    build:
+      context: ./elasticsearch
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
@@ -16,7 +17,8 @@ services:
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
     ports:
-      - "9200:9200"
+      - 9200:9200
+      - 9300:9300
     networks:
       - elk
 
