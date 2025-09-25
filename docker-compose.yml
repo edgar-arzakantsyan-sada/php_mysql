@@ -26,11 +26,13 @@ services:
 
   loki:
     container_name: loki_instance
-    image: grafana/loki:latest
+    build:
+      context: ./loki  
     ports:
       - 3100:3100
     volumes:
-      - ./loki/loki-config.yml:/etc/loki/loki-config.yaml
+      - ./loki/loki-config.yml:/etc/loki/config.yaml
+    command: ["-config.file=/etc/loki/config.yaml"]
     networks:
       - my-network
 
