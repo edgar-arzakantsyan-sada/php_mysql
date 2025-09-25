@@ -39,8 +39,11 @@ services:
   promtail:
     container_name: promtail_instance
     image: grafana/promtail:latest
+    build:
+      context: ./promtail
     volumes:
       - ./promtail/promtail-config.yml:/etc/promtail/promtail-config.yaml
+    command: ["-config.file=/etc/promtail/promtail-config.yaml"]  
     networks:
       - my-network    
 
@@ -70,9 +73,6 @@ services:
       - ./nginx/error.log:/var/log/nginx/error.log
     networks:
       - my-network    
-
-
-
 volumes:
   prometheus-vol:
 
