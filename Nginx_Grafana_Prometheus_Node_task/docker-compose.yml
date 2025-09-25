@@ -1,6 +1,7 @@
 services:
 
   node_exporter:
+           
     container_name: node_exporter_instance
     build:
       context: ./node_exporter
@@ -14,25 +15,37 @@ services:
     container_name: prometheus_instance
     build:
       context: ./prometheus
-    depends_on:
-      - node_exporter  
     restart: always
     ports:
       - 9090:9090
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./prometheus/query.log:/prometheus/query.log 
-      - prometheus-vol:/var/lib/prometheus/data 
+      - prometheus-vol:/var/lib/prometheus/data
     networks:
       - my-network
+
+  loki:
+    container_name: loki_instance
+    image: grafana/loki:latest
+    ports:
+      - 3100:3100
+    volumes:
+      - ./loki/loki-config.yml:/etc/loki/loki-config.yaml
+    networks:
+      - my-network
+
+  promtail:
+    container_name: promtail_instance
+    image: grafana/promtail:latest
+    volumes:
+      - ./promtail/promtail-config.yml:/etc/promtail/promtail-config.yaml
+    networks:
+      - my-network    
 
   grafana:
     container_name: grafana_instance
     build:
       context: ./grafana
-    depends_on:
-      - node_exporter
-      - prometheus  
     restart: always
     ports:
       - 3000:3000
@@ -44,10 +57,6 @@ services:
   nginx:
     container_name: proxy
     image: nginx:latest
-    depends_on:
-      - node_exporter
-      - prometheus
-      - grafana
     ports:
       - 80:80
       - 443:443
@@ -59,6 +68,8 @@ services:
       - ./nginx/error.log:/var/log/nginx/error.log
     networks:
       - my-network    
+
+
 
 volumes:
   prometheus-vol:
