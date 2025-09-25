@@ -21,6 +21,8 @@ services:
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-vol:/var/lib/prometheus/data
+    depends_on:
+      - node_exporter  
     networks:
       - my-network
 
@@ -33,6 +35,8 @@ services:
     volumes:
       - ./loki/loki-config.yml:/etc/loki/config.yaml
     command: ["-config.file=/etc/loki/config.yaml"]
+    depends_on:
+      - promtail
     networks:
       - my-network
 
@@ -56,6 +60,10 @@ services:
       - 3000:3000
     volumes:
       - ./grafana/datasources.yaml:/usr/local/grafana/conf/provisioning/datasources/datasources.yaml    
+    depends_on:
+      - prometheus
+      - loki
+      - node_exporter  
     networks:
       - my-network
 
@@ -71,6 +79,8 @@ services:
       - ./nginx/nginx-selfsigned.key:/etc/nginx/ssl/nginx-selfsigned.key
       - ./nginx/access.log:/var/log/nginx/access.log
       - ./nginx/error.log:/var/log/nginx/error.log
+    depends_on:
+      - grafana  
     networks:
       - my-network    
 volumes:
